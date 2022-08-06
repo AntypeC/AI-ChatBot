@@ -1,54 +1,53 @@
 import transformers
 from gtts import gTTS
 import os
-import requests
+import numpy as np
 
 
 class ChatBot:
     def __init__(self, name):
         self.name = name
         self.wake_up = False
-
         self.nlp = transformers.pipeline("conversational", model="microsoft/DialoGPT-medium")
 
-    def welcome_user(self):
+    def welcome_prompt(self):
         self.wake_up = True
-        res = f"bot >> Hello I'm {self.name}, how can I help you?"
-        res = res.replace("bot >> ", "")
+        res = np.random.choice([f"Hello, I'm {self.name}, how can I help you?", f"Hello there, I'm {self.name} the AI, how may I assist you?", f"Sup, my name is {self.name}, how can I help you?"])
         return res
 
-    def respond(self, feed):
+    def generate_response(self, feed):
         chat = self.nlp(transformers.Conversation(feed), pad_token_id=50256)
         res = str(chat)
         res = res[res.find("bot >> ")+6:].strip()
         return res
     
-    def speak(self, input_res):
+    def text_to_speech(self, input_res):
         tts_en = gTTS(text=input_res, lang="en", slow=False)
         filename = "res"
         tts_en.save(filename+".mp3")
         os.system(f"start {filename}.mp3")
 
-    def refresh_console(self):
+    def clear_console(self):
         os.system('powershell "clear"')
-
-# print(ChatBot.respond("test"))
 
 if __name__ == '__main__':
     ai = ChatBot(name="Dev")
+    ai.clear_console()
     input("user >> ")
 
     while True:
         if ai.wake_up == True:
-            ai.refresh_console()
-            r = ai.respond(user_res)
+            if any(i in user_res.lower() for i in ["what's your name", "what is your name"]):
+                r = np.random.choice([f"I'm {ai.name}.", f"My name is {ai.name}."])        
+            else:
+                r = ai.generate_response(user_res)
+            
             print(r)
-            ai.speak(r)
+            ai.text_to_speech(r)
             user_res = input("user >> ")
 
         else:
-            ai.refresh_console()
-            r = ai.welcome_user()
+            r = ai.welcome_prompt()
             print(r)
-            ai.speak(r)
+            ai.text_to_speech(r)
             user_res = input("user >> ")

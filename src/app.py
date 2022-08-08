@@ -1,8 +1,8 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-from gtts import gTTS
 import numpy as np
 import os
+import pyttsx3
 
 class ChatBot:
     def __init__(self, name):
@@ -10,6 +10,11 @@ class ChatBot:
         self.wake_up = False
         self.tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-large")
         self.nlp = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-large")
+
+        self.engine = pyttsx3.init()
+        voices = self.engine.getProperty('voices')
+        self.engine.setProperty('rate', 160)
+        self.engine.setProperty('voice', voices[0].id) #change index to change voices
 
     def welcome_prompt(self, init_msg):
         self.wake_up = True
@@ -33,10 +38,8 @@ class ChatBot:
         return res
     
     def text_to_speech(self, text):
-        tts_en = gTTS(text=text, lang="en", slow=False)
-        filename = "res"
-        tts_en.save(filename+".mp3")
-        os.system(f"start {filename}.mp3")
+        self.engine.say(text)
+        self.engine.runAndWait()
 
     def clear_console(self):
         os.system('powershell "clear"')

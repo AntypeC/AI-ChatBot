@@ -1,15 +1,15 @@
-import transformers
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 from gtts import gTTS
 import numpy as np
 import os
-from tkinter import ttk
-from tkinter import *
 
 class ChatBot:
     def __init__(self, name):
         self.name = name
         self.wake_up = False
-        self.nlp = transformers.pipeline("conversational", model="microsoft/DialoGPT-medium")
+        self.tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-large")
+        self.nlp = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-large")
 
     def welcome_prompt(self, init_msg):
         self.wake_up = True
@@ -24,9 +24,12 @@ class ChatBot:
         if any(i in feed.lower() for i in ["what's your name", "what is your name"]):
             res = np.random.choice([f"I'm {self.name}.", f"My name is {self.name}."])        
         else:
-            chatter = self.nlp(transformers.Conversation(feed), pad_token_id=50256)
-            res = str(chatter)
-            res = res[res.find("bot >> ")+6:].strip()
+            for _ in range(5):
+                new_user_input_ids = self.tokenizer.encode(feed + self.tokenizer.eos_token, return_tensors='pt')
+                bot_input_ids = torch.cat([chat_history_ids, new_user_input_ids], dim=-1) if _ > 0 else new_user_input_ids
+                chat_history_ids = self.nlp.generate(bot_input_ids, max_length=1000, pad_token_id=self.tokenizer.eos_token_id)
+                res = str(self.tokenizer.decode(chat_history_ids[:, bot_input_ids.shape[-1]:][0], skip_special_tokens=True))
+
         return res
     
     def text_to_speech(self, text):
@@ -41,7 +44,6 @@ class ChatBot:
 if __name__ == '__main__':
     ai = ChatBot(name="Dev")
     ai.clear_console()
-
     while True:
         if ai.wake_up == True:
             user_res = input("user >> ")

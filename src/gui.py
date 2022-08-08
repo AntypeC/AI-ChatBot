@@ -2,16 +2,16 @@ from tkinter import *
 from xml.dom.minidom import parseString
 import numpy as np
 from app import ChatBot
+import socket
 
 class GUI:
     def __init__(self, master, ai):
         self.master = master
-        master.title(ai.name)
+        master.title(f'{ai.name} the AI ChatBot')
         master.geometry('450x600')
 
         self.ai = ai
         self.user_input = ''
-        # self.line_count = 0
         self.layout()
     
     def layout(self):
@@ -41,26 +41,23 @@ class GUI:
         self.user_input = self.entry_line.get()
         self.entry_line.delete(0, 'end')
         self.enter_func()
-        # self.line_count += 1
 
         if self.ai.wake_up == True:
             r = self.ai.generate_response(self.user_input)
             self.text_box['state'] = NORMAL
-            # self.text_box.insert(END, f'{self.line_count}. {r}\n')
-            self.text_box.insert(END, f"user >> {self.user_input}\n")
+            self.text_box.insert(END, f"{socket.gethostname()} >> {self.user_input}\n")
             self.text_box.insert(END, f"{self.ai.name} >> {r}\n")
             self.text_box['state'] = DISABLED
             self.ai.text_to_speech(r)
         else:
             r = self.ai.welcome_prompt(self.user_input)
             self.text_box['state'] = NORMAL
-            # self.text_box.insert(END, f'{self.line_count}. {r}\n')
-            self.text_box.insert(END, f"user >> {self.user_input}\n")
+            self.text_box.insert(END, f"{socket.gethostname()} >> {self.user_input}\n")
             self.text_box.insert(END, f"{self.ai.name} >> {r}\n")
             self.text_box['state'] = DISABLED
             self.ai.text_to_speech(r)
         # print(*args, **kwargs)
 
 root = Tk()
-GUI(root, ChatBot(name="Dev"))
+GUI(root, ChatBot(name=f"Dev"))
 root.mainloop()

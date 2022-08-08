@@ -1,5 +1,4 @@
 from tkinter import *
-from xml.dom.minidom import parseString
 import numpy as np
 from app import ChatBot
 import socket
@@ -28,14 +27,19 @@ class GUI:
         self.enter_func()
 
     def enter_func(self):
-        temp_text = ["Chat with me...", "Dispatch me...", "Converse with me..."]
+        global temp_text
+        if self.ai.wake_up == False:
+            temp_text = ["Chat with me...", "Dispatch me...", "Converse with me..."]
+        else:
+            temp_text = ["Please respond...", "I'd like a response...", "Please reply to me..."]
         self.entry_line.insert(0, np.random.choice(temp_text))
         self.entry_line.bind("<FocusIn>", self.del_temp_text)
+        self.entry_line.bind("<BackSpace>", self.del_temp_text)
         self.entry_line.bind("<Return>", self.output_res)
 
     def del_temp_text(self, *args, **kwargs):
-        self.entry_line.delete(0, 'end')
-        # print(*args, **kwargs)
+        if any(i in self.entry_line.get() for i in temp_text):
+            self.entry_line.delete(0, 'end')
 
     def output_res(self, *args, **kwargs):
         self.user_input = self.entry_line.get()
@@ -56,7 +60,6 @@ class GUI:
             self.text_box.insert(END, f"{self.ai.name} >> {r}\n")
             self.text_box['state'] = DISABLED
             self.ai.text_to_speech(r)
-        # print(*args, **kwargs)
 
 root = Tk()
 GUI(root, ChatBot(name=f"Dev"))
